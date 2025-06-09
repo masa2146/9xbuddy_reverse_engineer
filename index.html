@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9xBuddy URL Decoder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .url-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .url-link:hover {
+            background: #0056b3;
+        }
+
+        .reverse-engineering {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+
+        .reverse-engineering h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .step {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 3px solid #28a745;
+        }
+
+        .step h4 {
+            color: #28a745;
+            margin-bottom: 5px;
+        }
+
+        .code-snippet {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 5px 0;
+            overflow-x: auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .example-data {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔓 9xBuddy URL Decoder</h1>
+            <p>Şifrelenmiş URL'leri çözümle ve gerçek indirme linklerini elde et</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>URL Decoder</h2>
+                <div class="example-data">
+                    <strong>Örnek Test Verisi:</strong><br>
+                    <small>Aşağıdaki "Örnek Veriyi Kullan" butonuna tıklayarak test edebilirsiniz.</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="token">Access Token:</label>
+                    <textarea id="token" rows="3" placeholder="Access token'ı buraya yapıştırın..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="encryptedUrl">Şifrelenmiş URL (Hex):</label>
+                    <textarea id="encryptedUrl" rows="4" placeholder="Şifrelenmiş hex URL'i buraya yapıştırın..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="cssHash">CSS Hash (Opsiyonel):</label>
+                    <input type="text" id="cssHash" value="cb67d183996514034d45" placeholder="CSS hash değeri">
+                </div>
+
+                <button class="btn" onclick="decodeUrl()">🔓 URL'i Çöz</button>
+                <button class="btn" onclick="useExampleData()" style="background: #28a745; margin-left: 10px;">📋 Örnek Veriyi Kullan</button>
+
+                <div id="result"></div>
+            </div>
+
+            <div class="card reverse-engineering">
+                <h3>🕵️ Reverse Engineering Süreci</h3>
+                
+                <div class="step">
+                    <h4>1. API Analizi</h4>
+                    <p>9xBuddy'nin cURL isteklerini analiz ederek şifrelenmiş URL formatını keşfettim.</p>
+                    <div class="code-snippet">Response: {"url": "3d4171326658..."}</div>
+                </div>
+
+                <div class="step">
+                    <h4>2. JavaScript Dosyası Tarama</h4>
+                    <p>422.cb67d183996514034d45.js dosyasında <strong>U fonksiyonunu</strong> buldum.</p>
+                    <div class="code-snippet">var U = function(e, t) { /* decrypt logic */ }</div>
+                </div>
+
+                <div class="step">
+                    <h4>3. Şifreleme Anahtarı Keşfi</h4>
+                    <p>Static string [69,84,65,77,95,89,82,82,79,83] = "SORRY_MATE"</p>
+                    <div class="code-snippet">Key = "SORRY_MATE" + hostname_length + css_hash + token</div>
+                </div>
+
+                <div class="step">
+                    <h4>4. Decrypt Algoritması</h4>
+                    <p>585.cb67d183996514034d45.js'de decrypt fonksiyonlarını keşfettim:</p>
+                    <div class="code-snippet">
+hex2bin() → reverse() → decrypt() → URL
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>5. Test & Doğrulama</h4>
+                    <p>Algoritmanın doğruluğunu test ederek çalışan decoder oluşturdum.</p>
+                    <div class="code-snippet">Result: //offmp3.net/process?url=...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class BuddyDecryptor {
+            constructor() {
+                this.staticString = "SORRY_MATE";
+                this.hostname = "9xbuddy.site";
+            }
+
+            decode64(e) {
+                if (e = e.replace(/\s/g, ""), /^[a-z0-9\+\/\s]+\={0,2}$/i.test(e) && !(e.length % 4 > 0)) {
+                    var t, r, n = 0, s = [];
+                    for (e = e.replace(/=/g, ""); n < e.length;) {
+                        switch (t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".indexOf(e.charAt(n)), n % 4) {
+                            case 1:
+                                s.push(String.fromCharCode(r << 2 | t >> 4));
+                                break;
+                            case 2:
+                                s.push(String.fromCharCode((15 & r) << 4 | t >> 2));
+                                break;
+                            case 3:
+                                s.push(String.fromCharCode((3 & r) << 6 | t))
+                        }
+                        r = t, n++
+                    }
+                    return s.join("")
+                }
+                return "";
+            }
+
+            ord(e) {
+                var t = "".concat(e), r = t.charCodeAt(0);
+                if (r >= 55296 && r <= 56319) {
+                    var n = r;
+                    return 1 === t.length ? r : 1024 * (n - 55296) + (t.charCodeAt(1) - 56320) + 65536
+                }
+                return r
+            }
+
+            decrypt(e, t) {
+                var r = "";
+                e = this.decode64(e);
+                for (var n = 0; n < e.length; n++) {
+                    var s = e.substr(n, 1), a = t.substr(n % t.length - 1, 1);
+                    s = Math.floor(this.ord(s) - this.ord(a)), r += s = String.fromCharCode(s)
+                }
+                return r
+            }
+
+            hex2bin(e) {
+                var t, r = [], n = 0;
+                for (t = (e += "").length; n < t; n += 2) {
+                    var s = parseInt(e.substr(n, 1), 16), a = parseInt(e.substr(n + 1, 1), 16);
+                    if (isNaN(s) || isNaN(a)) return false;
+                    r.push(s << 4 | a)
+                }
+                return String.fromCharCode.apply(String, r)
+            }
+
+            decryptUrl(encryptedUrl, token, cssHash = "cb67d183996514034d45") {
+                try {
+                    const hexDecoded = this.hex2bin(encryptedUrl);
+                    if (!hexDecoded) {
+                        throw new Error("Hex decode hatası");
+                    }
+                    
+                    const reversed = hexDecoded.split("").reverse().join("");
+                    const hostnameLength = this.hostname.length;
+                    const decryptKey = this.staticString + hostnameLength + cssHash + token;
+                    const decryptedUrl = this.decrypt(reversed, decryptKey);
+                    
+                    return decryptedUrl;
+                } catch (error) {
+                    throw new Error("URL decrypt hatası: " + error.message);
+                }
+            }
+        }
+
+        const decryptor = new BuddyDecryptor();
+
+        function decodeUrl() {
+            const token = document.getElementById('token').value.trim();
+            const encryptedUrl = document.getElementById('encryptedUrl').value.trim();
+            const cssHash = document.getElementById('cssHash').value.trim() || "cb67d183996514034d45";
+            
+            const resultDiv = document.getElementById('result');
+            
+            if (!token || !encryptedUrl) {
+                resultDiv.innerHTML = '<div class="result error">❌ Lütfen token ve şifrelenmiş URL\'i girin!</div>';
+                return;
+            }
+
+            try {
+                const decryptedUrl = decryptor.decryptUrl(encryptedUrl, token, cssHash);
+                
+                if (decryptedUrl) {
+                    const fullUrl = decryptedUrl.startsWith('//') ? 'https:' + decryptedUrl : decryptedUrl;
+                    
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            ✅ <strong>Başarılı!</strong><br>
+                            <strong>Çözülmüş URL:</strong><br>
+                            <code style="word-break: break-all;">${decryptedUrl}</code>
+                            <br>
+                            <a href="${fullUrl}" target="_blank" class="url-link">🔗 URL'i Aç</a>
+                            <button class="copy-btn" onclick="copyToClipboard('${decryptedUrl}')">📋 Kopyala</button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<div class="result error">❌ URL çözülemedi. Token veya URL yanlış olabilir.</div>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Hata: ${error.message}</div>`;
+            }
+        }
+
+        function useExampleData() {
+            document.getElementById('token').value = "aZiQbmWWY2xhcXCeqaWko21jk22tk6aSlade1suqnKeZqqKmnmVmZGpeY2KUYmVRhI+Xj6LMkWtqm19raWlqZ2U=";
+            document.getElementById('encryptedUrl').value = "3d41713266583672576571733971617170657068696e4a6c624e39316d4f7034774f3256637274755061397834794d32584850595137737a7a53706476796f68326457696e4f4b706f6d70636975717279744b704a725a70555064596c7171777642347a476a4c752b4b4962";
+            document.getElementById('cssHash').value = "cb67d183996514034d45";
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('📋 URL panoya kopyalandı!');
+            }).catch(function() {
+                // Fallback için eski yöntem
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('📋 URL panoya kopyalandı!');
+            });
+        }
+
+        // Enter tuşu ile decode yapma
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                decodeUrl();
+            }
+        });
+    </script>
+</body>
+</html>
