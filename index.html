@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>9xBuddy URL Decoder</title>
+    <title>9xBuddy URL Decoder & Signature Generator</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -85,10 +85,20 @@
             font-weight: bold;
             cursor: pointer;
             transition: transform 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+
+        .btn.tertiary {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
         }
 
         .result {
@@ -161,8 +171,14 @@
 
         .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         @media (max-width: 768px) {
@@ -189,44 +205,127 @@
             cursor: pointer;
             margin-left: 10px;
         }
+
+        .signature-card {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+        }
+
+        .signature-card h3 {
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .tab {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔓 9xBuddy URL Decoder</h1>
-            <p>Şifrelenmiş URL'leri çözümle ve gerçek indirme linklerini elde et</p>
+            <h1>🔓 9xBuddy URL Decoder & Signature Generator</h1>
+            <p>Şifrelenmiş URL'leri çözümle ve _sig parametrelerini oluştur</p>
         </div>
 
         <div class="grid">
+            <!-- URL Decoder -->
             <div class="card">
-                <h2>URL Decoder</h2>
-                <div class="example-data">
-                    <strong>Örnek Test Verisi:</strong><br>
-                    <small>Aşağıdaki "Örnek Veriyi Kullan" butonuna tıklayarak test edebilirsiniz.</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="token">Access Token:</label>
-                    <textarea id="token" rows="3" placeholder="Access token'ı buraya yapıştırın..."></textarea>
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('decrypt')">URL Decoder</button>
+                    <button class="tab" onclick="switchTab('signature')">Signature Generator</button>
                 </div>
 
-                <div class="form-group">
-                    <label for="encryptedUrl">Şifrelenmiş URL (Hex):</label>
-                    <textarea id="encryptedUrl" rows="4" placeholder="Şifrelenmiş hex URL'i buraya yapıştırın..."></textarea>
+                <!-- URL Decrypt Tab -->
+                <div id="decrypt-tab" class="tab-content active">
+                    <h2>URL Decoder</h2>
+                    <div class="example-data">
+                        <strong>Örnek Test Verisi:</strong><br>
+                        <small>Aşağıdaki "Örnek Veriyi Kullan" butonuna tıklayarak test edebilirsiniz.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="token">Access Token:</label>
+                        <textarea id="token" rows="3" placeholder="Access token'ı buraya yapıştırın..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="encryptedUrl">Şifrelenmiş URL (Hex):</label>
+                        <textarea id="encryptedUrl" rows="4" placeholder="Şifrelenmiş hex URL'i buraya yapıştırın..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cssHash">CSS Hash (Opsiyonel):</label>
+                        <input type="text" id="cssHash" value="cb67d183996514034d45" placeholder="CSS hash değeri">
+                    </div>
+
+                    <button class="btn" onclick="decodeUrl()">🔓 URL'i Çöz</button>
+                    <button class="btn secondary" onclick="useExampleData()">📋 Örnek Veriyi Kullan</button>
+
+                    <div id="decrypt-result"></div>
                 </div>
 
-                <div class="form-group">
-                    <label for="cssHash">CSS Hash (Opsiyonel):</label>
-                    <input type="text" id="cssHash" value="cb67d183996514034d45" placeholder="CSS hash değeri">
+                <!-- Signature Generation Tab -->
+                <div id="signature-tab" class="tab-content">
+                    <h2>Signature Generator</h2>
+                    <div class="example-data">
+                        <strong>_sig Parametresi:</strong><br>
+                        <small>9xBuddy extract istekleri için gerekli _sig parametresini oluştur.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="targetUrl">Target URL:</label>
+                        <input type="text" id="targetUrl" placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="authToken">Auth Token (X-Auth-Token):</label>
+                        <textarea id="authToken" rows="3" placeholder="X-Auth-Token değerini buraya yapıştırın..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="searchEngine">Search Engine:</label>
+                        <select id="searchEngine">
+                            <option value="yt">YouTube (yt)</option>
+                            <option value="fb">Facebook (fb)</option>
+                            <option value="tw">Twitter (tw)</option>
+                            <option value="ig">Instagram (ig)</option>
+                        </select>
+                    </div>
+
+                    <button class="btn" onclick="generateSignature()">🔑 Signature Oluştur</button>
+                    <button class="btn secondary" onclick="useSignatureExample()">📋 Örnek Veriyi Kullan</button>
+
+                    <div id="signature-result"></div>
                 </div>
-
-                <button class="btn" onclick="decodeUrl()">🔓 URL'i Çöz</button>
-                <button class="btn" onclick="useExampleData()" style="background: #28a745; margin-left: 10px;">📋 Örnek Veriyi Kullan</button>
-
-                <div id="result"></div>
             </div>
 
+            <!-- Reverse Engineering -->
             <div class="card reverse-engineering">
                 <h3>🕵️ Reverse Engineering Süreci</h3>
                 
@@ -262,6 +361,43 @@ hex2bin() → reverse() → decrypt() → URL
                     <div class="code-snippet">Result: //offmp3.net/process?url=...</div>
                 </div>
             </div>
+
+            <!-- Signature Analysis -->
+            <div class="card signature-card">
+                <h3>🔑 Signature Analysis</h3>
+                
+                <div class="step">
+                    <h4>1. _sig Parameter Detection</h4>
+                    <p>Extract isteklerinde _sig parametresinin kullanıldığını keşfettim.</p>
+                    <div class="code-snippet">POST /extract: {url: "...", _sig: "..."}</div>
+                </div>
+
+                <div class="step">
+                    <h4>2. Encryption Algorithm</h4>
+                    <p>Signature generation için custom encrypt fonksiyonu buldum.</p>
+                    <div class="code-snippet">encrypt(encodeURIComponent(url), authToken + suffix)</div>
+                </div>
+
+                <div class="step">
+                    <h4>3. Static Suffix Discovery</h4>
+                    <p>Signature için kullanılan static suffix: "jv7g2_DAMNN_DUDE"</p>
+                    <div class="code-snippet">Key = authToken + "jv7g2_DAMNN_DUDE"</div>
+                </div>
+
+                <div class="step">
+                    <h4>4. Implementation</h4>
+                    <p>Çalışan signature generator implementasyonu:</p>
+                    <div class="code-snippet">
+URL encode → Encrypt → Base64 → _sig
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h4>5. Validation</h4>
+                    <p>Test verileri ile doğrulama yapıldı.</p>
+                    <div class="code-snippet">✅ Signature generation working</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -270,6 +406,7 @@ hex2bin() → reverse() → decrypt() → URL
             constructor() {
                 this.staticString = "SORRY_MATE";
                 this.hostname = "9xbuddy.site";
+                this.staticSigSuffix = "jv7g2_DAMNN_DUDE";
             }
 
             decode64(e) {
@@ -293,6 +430,49 @@ hex2bin() → reverse() → decrypt() → URL
                 return "";
             }
 
+            encode64(str) {
+                if (/([^\u0000-\u00ff])/.test(str)) {
+                    throw new Error("Can't base64 encode non-ASCII characters.");
+                }
+                
+                const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+                let result = [];
+                let i = 0;
+                let prev = 0;
+                
+                for (i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    const pos = i % 3;
+                    
+                    switch (pos) {
+                        case 0:
+                            result.push(alphabet.charAt(char >> 2));
+                            prev = char;
+                            break;
+                        case 1:
+                            result.push(alphabet.charAt((prev & 3) << 4 | char >> 4));
+                            prev = char;
+                            break;
+                        case 2:
+                            result.push(alphabet.charAt((prev & 15) << 2 | char >> 6));
+                            result.push(alphabet.charAt(char & 63));
+                            prev = 0;
+                    }
+                }
+                
+                // Handle padding
+                const remainder = str.length % 3;
+                if (remainder === 1) {
+                    result.push(alphabet.charAt((prev & 3) << 4));
+                    result.push("==");
+                } else if (remainder === 2) {
+                    result.push(alphabet.charAt((prev & 15) << 2));
+                    result.push("=");
+                }
+                
+                return result.join("");
+            }
+
             ord(e) {
                 var t = "".concat(e), r = t.charCodeAt(0);
                 if (r >= 55296 && r <= 56319) {
@@ -310,6 +490,24 @@ hex2bin() → reverse() → decrypt() → URL
                     s = Math.floor(this.ord(s) - this.ord(a)), r += s = String.fromCharCode(s)
                 }
                 return r
+            }
+
+            encrypt(data, key) {
+                let result = "";
+                
+                for (let i = 0; i < data.length; i++) {
+                    const dataChar = data.substr(i, 1);
+                    
+                    // CRITICAL: Exact key index calculation from 9xBuddy source
+                    const keyIndex = i % key.length - 1;
+                    const adjustedKeyIndex = keyIndex < 0 ? key.length - 1 : keyIndex;
+                    const keyChar = key.substr(adjustedKeyIndex, 1);
+                    
+                    const encrypted = Math.floor(this.ord(dataChar) + this.ord(keyChar));
+                    result += String.fromCharCode(encrypted);
+                }
+                
+                return this.encode64(result);
             }
 
             hex2bin(e) {
@@ -339,16 +537,44 @@ hex2bin() → reverse() → decrypt() → URL
                     throw new Error("URL decrypt hatası: " + error.message);
                 }
             }
+
+            generateSignature(url, authToken) {
+                try {
+                    // Step 1: URL encode
+                    const encodedUrl = encodeURIComponent(url);
+                    
+                    // Step 2: Generate encryption key
+                    const encryptionKey = authToken + this.staticSigSuffix;
+                    
+                    // Step 3: Encrypt
+                    const encrypted = this.encrypt(encodedUrl, encryptionKey);
+                    
+                    return encrypted;
+                    
+                } catch (error) {
+                    throw new Error(`Signature generation failed: ${error.message}`);
+                }
+            }
         }
 
         const decryptor = new BuddyDecryptor();
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Add active class to selected tab and content
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
 
         function decodeUrl() {
             const token = document.getElementById('token').value.trim();
             const encryptedUrl = document.getElementById('encryptedUrl').value.trim();
             const cssHash = document.getElementById('cssHash').value.trim() || "cb67d183996514034d45";
             
-            const resultDiv = document.getElementById('result');
+            const resultDiv = document.getElementById('decrypt-result');
             
             if (!token || !encryptedUrl) {
                 resultDiv.innerHTML = '<div class="result error">❌ Lütfen token ve şifrelenmiş URL\'i girin!</div>';
@@ -379,15 +605,62 @@ hex2bin() → reverse() → decrypt() → URL
             }
         }
 
+        function generateSignature() {
+            const url = document.getElementById('targetUrl').value.trim();
+            const authToken = document.getElementById('authToken').value.trim();
+            const searchEngine = document.getElementById('searchEngine').value;
+            
+            const resultDiv = document.getElementById('signature-result');
+            
+            if (!url || !authToken) {
+                resultDiv.innerHTML = '<div class="result error">❌ Lütfen URL ve Auth Token\'ı girin!</div>';
+                return;
+            }
+
+            try {
+                const signature = decryptor.generateSignature(url, authToken);
+                
+                const extractPayload = {
+                    url: encodeURIComponent(url),
+                    _sig: signature,
+                    searchEngine: searchEngine
+                };
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        ✅ <strong>Signature Oluşturuldu!</strong><br>
+                        <strong>Target URL:</strong><br>
+                        <code style="word-break: break-all;">${url}</code><br><br>
+                        <strong>Generated _sig:</strong><br>
+                        <code style="word-break: break-all;">${signature}</code>
+                        <button class="copy-btn" onclick="copyToClipboard('${signature}')">📋 Kopyala</button><br><br>
+                        <strong>Extract Payload:</strong><br>
+                        <code style="word-break: break-all;">${JSON.stringify(extractPayload, null, 2)}</code>
+                        <button class="copy-btn" onclick="copyToClipboard('${JSON.stringify(extractPayload)}')">📋 JSON Kopyala</button><br><br>
+                        <strong>Algorithm:</strong><br>
+                        <code>encrypt(encodeURIComponent(url), authToken + "jv7g2_DAMNN_DUDE")</code>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error">❌ Hata: ${error.message}</div>`;
+            }
+        }
+
         function useExampleData() {
             document.getElementById('token').value = "aZiQbmWWY2xhcXCeqaWko21jk22tk6aSlade1suqnKeZqqKmnmVmZGpeY2KUYmVRhI+Xj6LMkWtqm19raWlqZ2U=";
             document.getElementById('encryptedUrl').value = "3d41713266583672576571733971617170657068696e4a6c624e39316d4f7034774f3256637274755061397834794d32584850595137737a7a53706476796f68326457696e4f4b706f6d70636975717279744b704a725a70555064596c7171777642347a476a4c752b4b4962";
             document.getElementById('cssHash').value = "cb67d183996514034d45";
         }
 
+        function useSignatureExample() {
+            document.getElementById('targetUrl').value = "https://www.youtube.com/watch?v=x7HA9KJKniU";
+            document.getElementById('authToken').value = "nK2W2ZiXqWKknqqebmecZZdnapOYa22dZ2thmGhrmJxrgKJ9l4SKsNmgh7OGhYmTfnaKfph8hZCyhorBqoSCsnWShHl9gZWSiIiwk9mbmtuUZ2fXqZefYWJmZGpnY2likmhkkg==";
+            document.getElementById('searchEngine').value = "yt";
+        }
+
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(function() {
-                alert('📋 URL panoya kopyalandı!');
+                alert('📋 Panoya kopyalandı!');
             }).catch(function() {
                 // Fallback için eski yöntem
                 const textArea = document.createElement("textarea");
@@ -396,14 +669,19 @@ hex2bin() → reverse() → decrypt() → URL
                 textArea.select();
                 document.execCommand('copy');
                 document.body.removeChild(textArea);
-                alert('📋 URL panoya kopyalandı!');
+                alert('📋 Panoya kopyalandı!');
             });
         }
 
-        // Enter tuşu ile decode yapma
+        // Enter tuşu ile işlem yapma
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                decodeUrl();
+                const activeTab = document.querySelector('.tab-content.active');
+                if (activeTab.id === 'decrypt-tab') {
+                    decodeUrl();
+                } else if (activeTab.id === 'signature-tab') {
+                    generateSignature();
+                }
             }
         });
     </script>
